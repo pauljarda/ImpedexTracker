@@ -2,11 +2,13 @@
 using Microsoft.EntityFrameworkCore;
 using ImpedexTracker.Data;
 using ImpedexTracker.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ImpedexTracker.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class JobsController : ControllerBase
     {
         private readonly AppDbContext _context;
