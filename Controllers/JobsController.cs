@@ -61,5 +61,36 @@ namespace ImpedexTracker.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        // GET /api/jobs/{id}/turnaround
+        [HttpGet("{id}/turnaround")]
+        public async Task<ActionResult> GetTurnaround(int id)
+        {
+            var job = await _context.Jobs.FindAsync(id);
+            if (job == null) return NotFound();
+            if (job.CompletedAt == null)
+                return Ok(new { jobId = id, status = "In progress", turnaroundDays = (object)null });
+
+            var days = (job.CompletedAt.Value - job.ReceivedAt).TotalDays;
+            return Ok(new { jobId = id, status = "Completed", turnaroundDays = Math.Round(days, 1) });
+        }
+
+        // GET /api/jobs/kpi
+        [HttpGet("kpi")]
+        public async Task<ActionResult> GetKpi()
+        {
+            var jobs = await _context.Jobs.ToListAsync();
+            var completed = jobs.Where(j => j.CompletedAt != null).ToList();
+
+            return Ok(new
+            {
+                totalJobs = jobs.Count,
+                byStatus = jobs.GroupBy(j => j.Status)
+                               .Select(g => new { status = g.Key, count = g.Count() }),
+                averageTurnaroundDays = completed.Any()
+                    ? Math.Round(completed.Average(j => (j.CompletedAt!.Value - j.ReceivedAt).TotalDays), 1)
+                    : 0
+            });
+        }
     }
 }
